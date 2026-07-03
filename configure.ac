@@ -2,7 +2,8 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT([cmatrix], [2.0], [abishekvashok@gmail.com])
 AC_CONFIG_SRCDIR([cmatrix.c])
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([Makefile cmatrix.spec])
 AM_INIT_AUTOMAKE
 
 AC_CANONICAL_HOST
@@ -19,53 +20,42 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
-dnl Checks for libraries.
-dnl Replace `main' with a function in -lncurses:
-AC_CHECK_LIB(ncurses, main)
-
 dnl Checks for header files.
-AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h sys/ioctl.h unistd.h termios.h termio.h getopt.h)
 
 dnl Checks for library functions.
-AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(putenv)
 
 dnl Checks for libraries.
-AC_CHECK_HEADERS(curses.h ncurses.h)
+AC_CHECK_HEADERS(curses.h ncurses.h ncursesw/ncurses.h)
 
 CURSES_LIB_NAME=""
-AC_CHECK_LIB(ncurses, tgetent, CURSES_LIB="-lncurses" CURSES_LIB_NAME=ncurses)
+AC_CHECK_LIB(ncursesw, waddnwstr, CURSES_LIB="-lncursesw" CURSES_LIB_NAME=ncursesw)
 
 if eval "test x$CURSES_LIB_NAME = x"
 then
-    AC_CHECK_LIB(curses, tgetent, CURSES_LIB="-lcurses" CURSES_LIB_NAME=curses)
+    AC_CHECK_LIB(ncurses, waddnwstr, CURSES_LIB="-lncurses" CURSES_LIB_NAME=ncurses)
 fi
 
 if eval "test x$CURSES_LIB_NAME = x"
 then
-    AC_CHECK_LIB(pdcurses, initscr, CURSES_LIB="-lpdcurses" CURSES_LIB_NAME=pdcurses)
+    AC_CHECK_LIB(curses, waddnwstr, CURSES_LIB="-lcurses" CURSES_LIB_NAME=curses)
 fi
 
 if eval "test x$CURSES_LIB_NAME = x"
 then
-    AC_CHECK_LIB(termcap, tgetent, CURSES_LIB="-ltermcap" CURSES_LIB_NAME=termcap)
+    AC_CHECK_LIB(pdcurses, waddnwstr, CURSES_LIB="-lpdcurses" CURSES_LIB_NAME=pdcurses)
 fi
 
 if eval "test x$CURSES_LIB_NAME = x"
 then
-    AC_CHECK_LIB(tinfo, tgetent, CURSES_LIB="-ltinfo" CURSES_LIB_NAME=tinfo)
+    AC_MSG_ERROR([
+*** No wide-character curses library found. CMatrix requires waddnwstr,
+*** usually provided by ncursesw. Install the wide ncurses development
+*** package or pass the required library through LIBS.])
 fi
 
-if eval "test x$CURSES_LIB_NAME = x"
-then
-    AC_MSG_WARN([
-*** No termcap lib available, consider getting the official ncurses
-*** distribution from ftp://ftp.gnu.org/pub/gnu/ncurses if you get
-*** errors compiling cmatrix.])
-else
-    AC_MSG_RESULT("Using $CURSES_LIB_NAME as the termcap library")
-fi
+AC_MSG_NOTICE([Using $CURSES_LIB_NAME as the curses library])
 
 AC_CHECK_LIB($CURSES_LIB_NAME, use_default_colors,
 	 AC_DEFINE(HAVE_USE_DEFAULT_COLORS))
@@ -169,4 +159,4 @@ AH_TEMPLATE([HAVE_WRESIZE], [Define this if you have the wresize function in you
 AH_TEMPLATE([HAVE_RESIZETERM], [Define this if you have the resizeterm function in your ncurses-type library])
 AH_TEMPLATE([USE_TIOCSTI], [Define this if you want a character you pressed in the screensaver mode to retain in the terminal])
 
-AC_OUTPUT(Makefile cmatrix.spec)
+AC_OUTPUT
